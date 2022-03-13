@@ -42,7 +42,7 @@ SimpleLogin roadmap is at https://github.com/simple-login/app/projects/1 and our
 
 - a Linux server (either a VM or dedicated server). This doc shows the setup for Ubuntu 18.04 LTS but the steps could be adapted for other popular Linux distributions. As most of components run as Docker container and Docker can be a bit heavy, having at least 2 GB of RAM is recommended. The server needs to have the port 25 (email), 80, 443 (for the webapp), 22 (so you can ssh into it) open.
 
-- a domain that you can config the DNS. It could be a sub-domain. In the rest of the doc, let's say it's `mydomain.com` for the email and `app.mydomain.com` for SimpleLogin webapp. Please make sure to replace these values by your domain name whenever they appear in the doc. A trick we use is to download this README file on your computer and replace all `mydomain.com` occurrences by your domain.
+- a domain that you can config the DNS. It could be a sub-domain. In the rest of the doc, let's say it's `maskedlogin.com` for the email and `app.maskedlogin.com` for SimpleLogin webapp. Please make sure to replace these values by your domain name whenever they appear in the doc. A trick we use is to download this README file on your computer and replace all `maskedlogin.com` occurrences by your domain.
 
 Except for the DNS setup that is usually done on your domain registrar interface, all the below steps are to be done on your server. The commands are to run with `bash` (or any bash-compatible shell like `zsh`) being the shell. If you use other shells like `fish`, please make sure to adapt the commands.
 
@@ -88,33 +88,33 @@ Please note that DNS changes could take up to 24 hours to propagate. In practice
 
 
 #### MX record
-Create a **MX record** that points `mydomain.com.` to `app.mydomain.com.` with priority 10.
+Create a **MX record** that points `mail.maskedlogin.com.` to `app.maskedlogin.com.` with priority 10.
 
 To verify if the DNS works, the following command
 
 ```bash
-dig @1.1.1.1 mydomain.com mx
+dig @1.1.1.1 mail.maskedlogin.com mx
 ```
 
 should return:
 
 ```
-mydomain.com.	3600	IN	MX	10 app.mydomain.com.
+mail.maskedlogin.com.	3600	IN	MX	10 app.maskedlogin.com.
 ```
 
 #### A record
-An **A record** that points `app.mydomain.com.` to your server IP.
+An **A record** that points `app.maskedlogin.com.` to your server IP.
 If you are using CloudFlare, we recommend to disable the "Proxy" option.
 To verify, the following command
 
 ```bash
-dig @1.1.1.1 app.mydomain.com a
+dig @1.1.1.1 app.maskedlogin.com a
 ```
 
 should return your server IP.
 
 #### DKIM
-Set up DKIM by adding a TXT record for `dkim._domainkey.mydomain.com.` with the following value:
+Set up DKIM by adding a TXT record for `dkim._domainkey.mail.maskedlogin.com.` with the following value:
 
 ```
 v=DKIM1; k=rsa; p=PUBLIC_KEY
@@ -146,7 +146,7 @@ sed "s/-----BEGIN PUBLIC KEY-----/v=DKIM1; k=rsa; p=/g" $(pwd)/dkim.pub.key | se
 To verify, the following command
 
 ```bash
-dig @1.1.1.1 dkim._domainkey.mydomain.com txt
+dig @1.1.1.1 dkim._domainkey.mail.maskedlogin.com txt
 ```
 
 should return the above value.
@@ -158,17 +158,17 @@ From Wikipedia https://en.wikipedia.org/wiki/Sender_Policy_Framework
 > Sender Policy Framework (SPF) is an email authentication method designed to detect forging sender addresses during the delivery of the email
 
 Similar to DKIM, setting up SPF is highly recommended.
-Add a TXT record for `mydomain.com.` with the value:
+Add a TXT record for `mail.maskedlogin.com.` with the value:
 
 ```
 v=spf1 mx ~all
 ```
 
-What it means is only your server can send email with `@mydomain.com` domain.
+What it means is only your server can send email with `@mail.maskedlogin.com` domain.
 To verify, the following command
 
 ```bash
-dig @1.1.1.1 mydomain.com txt
+dig @1.1.1.1 mail.maskedlogin.com txt
 ```
 
 should return the above value.
@@ -180,7 +180,7 @@ From Wikipedia https://en.wikipedia.org/wiki/DMARC
 > It (DMARC) is designed to give email domain owners the ability to protect their domain from unauthorized use, commonly known as email spoofing
 
 Setting up DMARC is also recommended.
-Add a TXT record for `_dmarc.mydomain.com.` with the following value
+Add a TXT record for `_dmarc.mail.maskedlogin.com.` with the following value
 
 ```
 v=DMARC1; p=quarantine; adkim=r; aspf=r
@@ -191,7 +191,7 @@ This is a `relaxed` DMARC policy. You can also use a more strict policy with `v=
 To verify, the following command
 
 ```bash
-dig @1.1.1.1 _dmarc.mydomain.com txt
+dig @1.1.1.1 _dmarc.mail.maskedlogin.com txt
 ```
 
 should return the set value.
@@ -264,7 +264,7 @@ Choose "Internet Site" in Postfix installation window then keep using the propos
 ![](./docs/postfix-installation.png)
 ![](./docs/postfix-installation2.png)
 
-Replace `/etc/postfix/main.cf` with the following content. Make sure to replace `mydomain.com` by your domain.
+Replace `/etc/postfix/main.cf` with the following content. Make sure to replace `mail.maskedlogin.com` by your domain.
 
 ```
 # POSTFIX config file, adapted for SimpleLogin
@@ -272,7 +272,7 @@ smtpd_banner = $myhostname ESMTP $mail_name (Ubuntu)
 biff = no
 
 # appending .domain is the MUA's job.
-append_dot_mydomain = no
+append_dot_maskedlogin = no
 
 # Uncomment the next line to generate "delayed mail" warnings
 #delay_warning_time = 4h
@@ -299,9 +299,9 @@ mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 240.0.0.0/24
 
 # Set your domain here
 mydestination =
-myhostname = app.mydomain.com
-mydomain = mydomain.com
-myorigin = mydomain.com
+myhostname = app.maskedlogin.com
+maskedlogin = mail.maskedlogin.com
+myorigin = mail.maskedlogin.com
 
 relay_domains = pgsql:/etc/postfix/pgsql-relay-domains.cf
 transport_maps = pgsql:/etc/postfix/pgsql-transport-maps.cf
@@ -335,7 +335,7 @@ smtpd_recipient_restrictions =
 ```
 
 Create the `/etc/postfix/pgsql-relay-domains.cf` file with the following content.
-Make sure that the database config is correctly set, replace `mydomain.com` with your domain, update 'myuser' and 'mypassword' with your postgres credentials.
+Make sure that the database config is correctly set, replace `mail.maskedlogin.com` with your domain, update 'myuser' and 'mypassword' with your postgres credentials.
 
 ```
 # postgres config
@@ -345,11 +345,11 @@ password = mypassword
 dbname = simplelogin
 
 query = SELECT domain FROM custom_domain WHERE domain='%s' AND verified=true
-    UNION SELECT '%s' WHERE '%s' = 'mydomain.com' LIMIT 1;
+    UNION SELECT '%s' WHERE '%s' = 'mail.maskedlogin.com' LIMIT 1;
 ```
 
 Create the `/etc/postfix/pgsql-transport-maps.cf` file with the following content.
-Again, make sure that the database config is correctly set, replace `mydomain.com` with your domain, update 'myuser' and 'mypassword' with your postgres credentials.
+Again, make sure that the database config is correctly set, replace `mail.maskedlogin.com` with your domain, update 'myuser' and 'mypassword' with your postgres credentials.
 
 ```
 # postgres config
@@ -360,7 +360,7 @@ dbname = simplelogin
 
 # forward to smtp:127.0.0.1:20381 for custom domain AND email domain
 query = SELECT 'smtp:127.0.0.1:20381' FROM custom_domain WHERE domain = '%s' AND verified=true
-    UNION SELECT 'smtp:127.0.0.1:20381' WHERE '%s' = 'mydomain.com' LIMIT 1;
+    UNION SELECT 'smtp:127.0.0.1:20381' WHERE '%s' = 'mail.maskedlogin.com' LIMIT 1;
 ```
 
 Finally, restart Postfix
@@ -373,7 +373,7 @@ sudo systemctl restart postfix
 
 To run SimpleLogin, you need a config file at `$(pwd)/simplelogin.env`. Below is an example that you can use right away, make sure to
 
-- replace `mydomain.com` by your domain,
+- replace `mail.maskedlogin.com` by your domain,
 - set `FLASK_SECRET` to a secret string, 
 - update 'myuser' and 'mypassword' with your database credentials used in previous step.
 
@@ -382,16 +382,16 @@ Some have "dummy" values, fill them up if you want to enable these features (Pad
 
 ```.env
 # WebApp URL
-URL=http://app.mydomain.com
+URL=http://app.maskedlogin.com
 
 # domain used to create alias
-EMAIL_DOMAIN=mydomain.com
+EMAIL_DOMAIN=mail.maskedlogin.com
 
 # transactional email is sent from this email address
-SUPPORT_EMAIL=support@mydomain.com
+SUPPORT_EMAIL=support@maskedlogin.com
 
 # custom domain needs to point to these MX servers
-EMAIL_SERVERS_WITH_PRIORITY=[(10, "app.mydomain.com.")]
+EMAIL_SERVERS_WITH_PRIORITY=[(10, "app.maskedlogin.com.")]
 
 # By default, new aliases must end with ".{random_word}". This is to avoid a person taking all "nice" aliases.
 # this option doesn't make sense in self-hosted. Set this variable to disable this option.
@@ -489,7 +489,7 @@ docker run -d \
 
 ### Nginx
 
-Install Nginx and make sure to replace `mydomain.com` by your domain
+Install Nginx and make sure to replace `mail.maskedlogin.com` by your domain
 
 ```bash
 sudo apt-get install -y nginx
@@ -499,7 +499,7 @@ Then, create `/etc/nginx/sites-enabled/simplelogin` with the following lines:
 
 ```nginx
 server {
-    server_name  app.mydomain.com;
+    server_name  app.maskedlogin.com;
 
     location / {
         proxy_pass http://localhost:7777;
@@ -518,7 +518,7 @@ At this step, you should also setup the SSL for Nginx.
 
 ### Enjoy!
 
-If all the above steps are successful, open http://app.mydomain.com/ and create your first account!
+If all the above steps are successful, open http://app.maskedlogin.com/ and create your first account!
 
 By default, new accounts are not premium so don't have unlimited alias. To make your account premium,
 please go to the database, table "users" and set "lifetime" column to "1" or "TRUE":

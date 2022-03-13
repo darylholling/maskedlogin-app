@@ -42,7 +42,7 @@ SimpleLogin roadmap is at https://github.com/simple-login/app/projects/1 and our
 
 - a Linux server (either a VM or dedicated server). This doc shows the setup for Ubuntu 18.04 LTS but the steps could be adapted for other popular Linux distributions. As most of components run as Docker container and Docker can be a bit heavy, having at least 2 GB of RAM is recommended. The server needs to have the port 25 (email), 80, 443 (for the webapp), 22 (so you can ssh into it) open.
 
-- a domain that you can config the DNS. It could be a sub-domain. In the rest of the doc, let's say it's `maskedlogin.com` for the email and `app.maskedlogin.com` for SimpleLogin webapp. Please make sure to replace these values by your domain name whenever they appear in the doc. A trick we use is to download this README file on your computer and replace all `maskedlogin.com` occurrences by your domain.
+- a domain that you can config the DNS. It could be a sub-domain. In the rest of the doc, let's say it's `mail.maskedlogin.com` for the email and `app.maskedlogin.com` for SimpleLogin webapp. Please make sure to replace these values by your domain name whenever they appear in the doc. A trick we use is to download this README file on your computer and replace all `mail.maskedlogin.com` occurrences by your domain.
 
 Except for the DNS setup that is usually done on your domain registrar interface, all the below steps are to be done on your server. The commands are to run with `bash` (or any bash-compatible shell like `zsh`) being the shell. If you use other shells like `fish`, please make sure to adapt the commands.
 
